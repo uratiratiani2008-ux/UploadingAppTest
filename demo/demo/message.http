@@ -1,0 +1,23 @@
+### Find All Content
+GET http://localhost:8080/content
+
+### Get Content by ID
+GET http://localhost:8080/content/1
+
+### GET Content by Username
+GET http://localhost:8080/content/username/rati
+
+### Create New Content
+POST http://localhost:8080/content/add/4/gio/giobio
+Content-Type: application/json
+
+This is a new contnt-body.
+
+### Update Existing Content
+PUT http://localhost:8080/content/update/4/rati/ratibati
+Content-Type: application/json
+
+This is the body of the newly updated content.
+
+### Delete Content
+DELETE http://localhost:8080/content/delete/5/2
