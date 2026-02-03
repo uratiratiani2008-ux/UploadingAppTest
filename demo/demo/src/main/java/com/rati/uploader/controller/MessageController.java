@@ -1,66 +1,90 @@
 package com.rati.uploader.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rati.uploader.model.Message;
-import com.rati.uploader.repository.messageRepository.RepositoryInterface;
+import com.rati.uploader.repository.messageRepository.MessageRepository;
 import com.rati.uploader.repository.userRepository.UserRepositoryInterface;
+import com.rati.uploader.request.UsernamePasswordBody;
+import com.rati.uploader.request.UsernamePasswordMessageid;
+import com.rati.uploader.request.UsernamePasswordMessageidBody;
 
 @RestController
-@RequestMapping("/content")
+@RequestMapping("/messages")
 @CrossOrigin
 public class MessageController {
-    private final RepositoryInterface messageRepository;
+
+    private final MessageRepository messageRepository;
     private final UserRepositoryInterface userRepository;
 
-    public MessageController(RepositoryInterface messageRepository, UserRepositoryInterface userRepository) {
+    public MessageController(MessageRepository messageRepository, UserRepositoryInterface userRepository) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
     }
 
     @GetMapping("")
-    public List<Message> getAllMessages() {
-        return messageRepository.getAllMessages();
+    public List<Message> getMessageHandler(@RequestParam(required = false) Integer id, @RequestParam(required = false) String username) {
+        if (id != null) {
+            return List.of(messageRepository.findById(id).orElseThrow(() -> new RuntimeException("Message not found with id: " + id)));
+        }
+
+        if (username != null) {
+            List<Message> messages = messageRepository.findAllByUserId(userRepository.getIdFromUsername(username));
+            return messages;
+        }
+
+        return messageRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public Message getMessageById(@PathVariable Integer id) {
-        return messageRepository.getMessageById(id).orElseThrow(() -> new RuntimeException("Message not found"));
-    }
-
-    @GetMapping("/username/{username}")
-    public List<Message> getMessagesByUsername(@PathVariable String username) {
-        return messageRepository.getMessagesByUsername(username);
-    }
-
-    @PostMapping("/add/{id}/{username}/{password}")
-    public void addMessage(@PathVariable Integer id, @PathVariable String username,@PathVariable String password, @RequestBody String body) {
-        if (userRepository.login(username, password)){
-            messageRepository.add(id, username, body);
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("")
+    public void addMessage(@RequestBody UsernamePasswordBody data) {
+        if (userRepository.login(data.username(), data.password())){
+            Message message = new Message(
+                null,
+                userRepository.getIdFromUsername(data.username()),
+                data.body(),
+                LocalDateTime.now(),
+                null
+            );
+            messageRepository.save(message);
         }
     }
 
-    @PutMapping("/update/{id}/{username}/{password}")
-    public void updateMessage(@PathVariable Integer id, @PathVariable String username,@PathVariable String password,@RequestBody String body) {
-        if (userRepository.login(username, password) &&  messageRepository.isOwner(id, username)){
-            messageRepository.update(id, body);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping("")
+    public void updateMessage(@RequestBody UsernamePasswordMessageidBody data) {
+        if (userRepository.login(data.username(), data.password()) &&  messageRepository.existsByIdAndUserId(data.messageId(), userRepository.getIdFromUsername(data.username()))){
+            Message existingMessage = messageRepository.findById(data.messageId()).orElseThrow(() -> new RuntimeException("Message not found with id: " + data.messageId()));
+            Message message = new Message(
+                data.messageId(),
+                userRepository.getIdFromUsername(data.username()),
+                data.body(),
+                existingMessage.dateCreated(),
+                LocalDateTime.now()
+            );
+            messageRepository.save(message);
         }
     }
 
-    @DeleteMapping("/delete/{id}/{username}/{password}")
-    public void deleteMessage(@PathVariable Integer id, @PathVariable String username, @PathVariable String password){
-        if (userRepository.login(username, password) && messageRepository.isOwner(id, username)){
-            messageRepository.delete(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("")
+    public void deleteMessage(@RequestBody UsernamePasswordMessageid data) {
+        if (userRepository.login(data.username(), data.password()) && messageRepository.existsByIdAndUserId(data.messageId(), userRepository.getIdFromUsername(data.username()))){
+            messageRepository.deleteById(data.messageId());
         }
     }
 

@@ -2,14 +2,17 @@ package com.rati.uploader.model;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.Id;
+
 public record Message (
+    @Id
     Integer id,
-    String username,
+    Integer userId,
     String body,
     LocalDateTime dateCreated,
     LocalDateTime dateUpdated
 ){
-    public String getUsername() {
-        return this.username;
+    public Integer getUserId() {
+        return this.userId;
     }
 }

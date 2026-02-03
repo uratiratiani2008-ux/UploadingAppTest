@@ -24,49 +24,51 @@ public class RepositoryH2 implements RepositoryInterface {
 
     private static Message mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new Message(rs.getInt("id"),
-                           rs.getString("username"),
+                           rs.getInt("user_id"),
                            rs.getString("body"),
                            rs.getObject("date_created", LocalDateTime.class),
                            rs.getObject("date_updated", LocalDateTime.class));
     }
     
-    public List<Message> getAllMessages() {
-        String sql = "SELECT * FROM Messages";
+    @Override
+    public List<Message> findAll() {
+        String sql = "SELECT * FROM MESSAGE";
         List<Message> messages = jdbcTemplate.query(sql, RepositoryH2::mapRow);
         return messages;
     }
     
-    public Optional<Message> getMessageById(Integer id) {
-        String sql = "SELECT * FROM Messages WHERE id=?";
+    @Override
+    public Optional<Message> findById(Integer id) {
+        String sql = "SELECT * FROM MESSAGE WHERE id=?";
         Message message = jdbcTemplate.queryForObject(sql, RepositoryH2::mapRow, new Object[]{id});
         return Optional.of(message);
     }
 
-    public List<Message> getMessagesByUsername(String username) {
-        String sql = "SELECT * FROM Messages WHERE username=?";
-        List<Message> messages = jdbcTemplate.query(sql, RepositoryH2::mapRow, new Object[]{username});
+    @Override
+    public List<Message> findAllByUserId(Integer userId) {
+        String sql = "SELECT * FROM MESSAGE WHERE user_id=?";
+        List<Message> messages = jdbcTemplate.query(sql, RepositoryH2::mapRow, new Object[]{userId});
         return messages;
     }
 
-    public void add(Integer id, String username, String body) {
-        String sql = "INSERT INTO Messages (id, username, body, date_created, date_updated) VALUES (?, ?, ?, NOW(), NULL)";
-        jdbcTemplate.update(sql, id, username, body);
+    @Override
+    public void save(Message message) {
+        String sql = "INSERT INTO MESSAGE (id, user_id, body, date_created, date_updated) VALUES (?, ?, ?, NOW(), NULL)";
+        jdbcTemplate.update(sql, message.id(), message.userId(), message.body());
     }
 
-    public void delete(Integer id) {
-        String sql = "DELETE FROM Messages WHERE id=?";
+    @Override
+    public void deleteById(Integer id) {
+        String sql = "DELETE FROM MESSAGE WHERE id=?";
         jdbcTemplate.update(sql, id);
     }
 
-    public void update(Integer id, String body) {
-        String sql = "UPDATE Messages SET body=?, date_updated=NOW() WHERE id=?";
-        jdbcTemplate.update(sql, body, id);
-    }
     
-    public boolean isOwner(Integer id, String username) {
-        String sql = "SELECT COUNT(*) FROM Messages WHERE id=? AND username=?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{id, username});
+    @Override
+    public boolean existsByIdAndUserId(Integer id, Integer userId) {
+        String sql = "SELECT COUNT(*) FROM MESSAGE WHERE id=? AND user_id=?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{id, userId});
         return count != null && count > 0;
     }
-
+    
 }

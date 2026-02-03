@@ -1,23 +1,39 @@
 ### Find All Content
-GET http://localhost:8080/content
+GET http://localhost:8080/messages
 
 ### Get Content by ID
-GET http://localhost:8080/content/1
+GET http://localhost:8080/messages?id=3
 
 ### GET Content by Username
-GET http://localhost:8080/content/username/rati
+GET http://localhost:8080/messages?username=rati
 
 ### Create New Content
-POST http://localhost:8080/content/add/4/gio/giobio
+POST http://localhost:8080/messages
 Content-Type: application/json
 
-This is a new contnt-body.
+{
+  "username": "masho",
+  "password": "mashomasho",
+  "body": "Created a new message"
+}
 
 ### Update Existing Content
-PUT http://localhost:8080/content/update/4/rati/ratibati
+PUT http://localhost:8080/messages
 Content-Type: application/json
 
-This is the body of the newly updated content.
+{
+  "username": "masho",
+  "password": "incorrect password",
+  "messageId": 3,
+  "body": "This is the body of the newly updated content."
+}
 
 ### Delete Content
-DELETE http://localhost:8080/content/delete/5/2
+DELETE http://localhost:8080/messages
+Content-Type: application/json
+
+{
+  "username": "gio",
+  "password": "giopio",
+  "messageId": 4
+}

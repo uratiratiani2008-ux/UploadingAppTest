@@ -18,59 +18,51 @@ public class RepositoryList implements RepositoryInterface {
     
     private final List<Message> messageList = new ArrayList<>();
 
-    public List<Message> getAllMessages() {
+    @Override
+    public List<Message> findAll() {
         return messageList;
     }
     
-    public Optional<Message> getMessageById(Integer id) {
+    @Override
+    public Optional<Message> findById(Integer id) {
         return messageList.stream()
                 .filter(message -> message.id().equals(id))
                 .findFirst();
     }
 
-    public List<Message> getMessagesByUsername(String username) {
+    @Override
+    public List<Message> findAllByUserId(Integer userId) {
         return messageList.stream()
-                .filter(message -> message.username().equals(username))
+                .filter(message -> message.userId().equals(userId))
                 .toList();
     }
 
-    public void add(Integer id, String username, String body) {
-        Message newMessage = new Message(id, username, body, java.time.LocalDateTime.now(), null);
-        messageList.add(newMessage);
+    @Override
+    public void save(Message message) {
+        messageList.removeIf(m -> m.id().equals(message.id()));
+        messageList.add(message);
     }
     
-    public void delete(Integer id) {
+    @Override
+    public void deleteById(Integer id) {
         messageList.removeIf(message -> (message.id().equals(id)));
     }
 
-    public void update(Integer id, String body) {
-        Optional<Message> messageToUpdate = getMessageById(id);
-        messageToUpdate.ifPresent(message -> {
-            messageList.remove(message);
-            Message updatedMessage = new Message(
-                message.id(),
-                message.username(),
-                body,
-                message.dateCreated(),
-                java.time.LocalDateTime.now()
-            );
-            messageList.add(updatedMessage);
-        });
-    }
-
-    public boolean isOwner(Integer id, String username) {
-        Optional<Message> message = getMessageById(id);
+    @Override
+    public boolean existsByIdAndUserId(Integer id, Integer userId) {
+        Optional<Message> message = findById(id);
         if (message.isEmpty()) {
             return false;
         }
-        return message.get().getUsername().equals(username);
+        return message.get().userId().equals(userId);
     }
 
+    
     @PostConstruct
     private void init() {
-        messageList.add(new Message(1,"rati","description of ratis first blog",LocalDateTime.now(),null));   
-        messageList.add(new Message(2,"rati","description of ratis second blog",LocalDateTime.now(),null));
-        messageList.add(new Message(3,"masho","description of mashos first blog",LocalDateTime.now(),null));
+        messageList.add(new Message(1,1,"description of ratis first blog",LocalDateTime.now(),null));   
+        messageList.add(new Message(2,1,"description of ratis second blog",LocalDateTime.now(),null));
+        messageList.add(new Message(3,2,"description of mashos first blog",LocalDateTime.now(),null));
     }
 
 }

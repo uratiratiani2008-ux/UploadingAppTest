@@ -17,8 +17,8 @@ public class UserRepositoryH2 implements UserRepositoryInterface{
     
     @Override
     public void add(String username, String password) {
-        String sql = "INSERT INTO User (username, password) VALUES (?, ?)";
-        jdbcTemplate.update(sql, username, password);
+        String sql = "INSERT INTO User (id, username, password) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, jdbcTemplate.queryForObject("SELECT MAX(id) + 1 FROM User", Integer.class), username, password);
     }
 
     @Override
@@ -26,6 +26,13 @@ public class UserRepositoryH2 implements UserRepositoryInterface{
         String sql = "SELECT COUNT(*) FROM User WHERE username=? AND password=?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{username, password});
         return count != null && count > 0;
+    }
+
+    @Override
+    public Integer getIdFromUsername(String username) {
+        String sql = "SELECT id FROM User WHERE username=?";
+        Integer id = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{username});
+        return id;
     }
     
 }

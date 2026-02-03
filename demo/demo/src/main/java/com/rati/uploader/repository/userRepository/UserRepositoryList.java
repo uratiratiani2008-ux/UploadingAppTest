@@ -18,7 +18,7 @@ public class UserRepositoryList implements UserRepositoryInterface{
     private final List<User> userList = new ArrayList<>();
 
     public void add(String username, String password){
-        userList.add(new User(username,password));
+        userList.add(new User(userList.size() + 1, username, password));
     }
     
     public boolean login(String username, String password) {
@@ -28,11 +28,20 @@ public class UserRepositoryList implements UserRepositoryInterface{
         return user.isPresent();
     }
 
-    @PostConstruct
-    private void init() {
-        userList.add(new User("rati","ratibati"));   
-        userList.add(new User("masho","mashomasho"));
-        userList.add(new User("gio","giopio"));
+    @Override
+    public Integer getIdFromUsername(String username) {
+        Optional<User> user = userList.stream()
+            .filter(u -> u.username().equals(username))
+            .findFirst();
+        return user.map(User::id).orElse(null);
     }
 
+    @PostConstruct
+    private void init() {
+        add("rati","ratibati");
+        add("masho","mashomasho");
+        add("gio","giopio");
+    }
+
+    
 }
